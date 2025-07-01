@@ -9,29 +9,29 @@ import configs as cfg
 pygame.init()
 
 #Base Shapes
-def draw_text(surface, text: str, coordinates, font_size = 20, color = cfg.VS_OFF_WHITE, orientation="left"):
+def text(surface, text: str, coordinates, font_size = 20, color = cfg.VS_OFF_WHITE):
     font = pygame.font.SysFont("ubuntu", font_size) 
     text_surface = font.render(text, True, color)
     x, y = coordinates
     new_coordinates = (x, y)
-    if orientation == "left":
+    """if orientation == "left":
         text_rectangle = surface.get_rect(topleft=(new_coordinates))
     else:
         text_rectangle = surface.get_rect(center=(new_coordinates))
+"""
+    surface.blit(text_surface, (x, y))
 
-    surface.blit(text_surface, text_rectangle)
-
-def draw_rectangle(surface, coordinates, rectangle_width, rectangle_height, border=0, color= cfg.BLACK):
-    rect_object = (coordinates[0], coordinates[1], rectangle_width, rectangle_width)
+def rectangle(surface, coordinates, rectangle_width, rectangle_height, border=0, color= cfg.BLACK):
+    rect_object = (coordinates[0], coordinates[1], rectangle_width, rectangle_height)
     pygame.draw.rect(surface, color, rect_object, border)
 
 
-def draw_line(surface, start_pos, end_pos, color = cfg.BLACK):
+def line(surface, start_pos, end_pos, color = cfg.BLACK):
     pygame.draw.line(surface, color, start_pos, end_pos, cfg.line_width)
 
 
 # Advanced shapes
-def draw_node(surface, value, coordinates, rectangle_width, rectangle_height, error = False, highlight = False):
+def node(surface, value, coordinates, rectangle_width, rectangle_height, error = False, highlight = False):
     if(highlight):
         color = cfg.HIGHLIGHT_YELLOW
     elif(error):
@@ -39,13 +39,13 @@ def draw_node(surface, value, coordinates, rectangle_width, rectangle_height, er
     else:
         color = cfg.WHITE
 
-    draw_rectangle(surface, coordinates, rectangle_width, rectangle_height, 0, color)
-    draw_rectangle(surface, coordinates, rectangle_width, rectangle_height, 2, cfg.BLACK)
-    draw_text(surface, f"{value}", (coordinates[0] + cfg.text_offset, coordinates[1] + cfg.text_offset))
+    rectangle(surface, coordinates, rectangle_width, rectangle_height, 0, color)
+    rectangle(surface, coordinates, rectangle_width, rectangle_height, 2, cfg.BLACK)
+    text(surface, f"{value}", (coordinates[0] + cfg.text_offset, coordinates[1] + cfg.text_offset))
 
-def draw_arrow_bidirect(surface, start_pos, end_pos, color=cfg.BLACK):
+def arrow_bidirect(surface, start_pos, end_pos, color=cfg.BLACK):
     #Draw the line
-    draw_line(surface, start_pos, end_pos, color)
+    line(surface, start_pos, end_pos, color)
 
     #Find arrow head points
     angle1 = math.atan2((end_pos[1]-start_pos[1]),(end_pos[0]-start_pos[0]))
@@ -67,16 +67,16 @@ def draw_arrow_bidirect(surface, start_pos, end_pos, color=cfg.BLACK):
     d_pos = (xd, yd)
 
     #Draw the arrow head
-    draw_line(surface, start_pos, a_pos, color)
-    draw_line(surface, start_pos, b_pos, color)
+    line(surface, start_pos, a_pos, color)
+    line(surface, start_pos, b_pos, color)
 
-    draw_line(surface, end_pos, c_pos, color)
-    draw_line(surface, end_pos, d_pos, color)
+    line(surface, end_pos, c_pos, color)
+    line(surface, end_pos, d_pos, color)
 
 
-def draw_arrow(surface, start_pos, end_pos, color=cfg.BLACK):
+def arrow(surface, start_pos, end_pos, color=cfg.BLACK):
     #Draw the line
-    draw_line(surface, start_pos, end_pos, color)
+    line(surface, start_pos, end_pos, color)
 
     #Find arrow head points
     angle2 = math.atan2((start_pos[1]-end_pos[1]),(start_pos[0]-end_pos[0]))
@@ -88,5 +88,5 @@ def draw_arrow(surface, start_pos, end_pos, color=cfg.BLACK):
     yd = end_pos[1] + (cfg.arrow_head_distance*math.sin(angle2-math.pi/4))
     d_pos = (xd, yd)
     
-    draw_line(surface, end_pos, c_pos, color)
-    draw_line(surface, end_pos, d_pos, color)
+    line(surface, end_pos, c_pos, color)
+    line(surface, end_pos, d_pos, color)
