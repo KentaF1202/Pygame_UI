@@ -5,15 +5,19 @@ import pygame
 import configs as cfg
 import draw
 
-# Initialize Pygame
+# Initialize Pygame And Its Modules
 pygame.init()  
+pygame.scrap.init()
+pygame.key.set_repeat(500, 100)  # Set key repeat delay and interval
 
 # Class for the Text Editor Surface
 class Surface:
     def __init__(self, rect, placeholder_text=""):
-        self.surface = pygame.Surface((rect[2], rect[3]))
         self.x = rect[0]
         self.y = rect[1]
+        self.width = rect[2]
+        self.height = rect[3]
+        self.surface = pygame.Surface((self.width, self.height))
         self.margin_x = cfg.text_margin_x
         self.margin_y = cfg.text_margin_y
         self.line_spacing = cfg.text_line_spacing
@@ -27,12 +31,20 @@ class Surface:
         self.font = cfg.text_font
         self.font_color = cfg.GREEN
         self.background_color = cfg.BLACK
+        self.border_type = "none"
+        self.border_color = cfg.VS_LIGHT_GREY
+        self.border_thickness = 1
 
     def set_background_color(self, color):
         self.background_color = color
 
-    def set_border(self, border_type, border_color, border_thickness):
-        pass
+    def set_border(self, border_type="solid", border_color=cfg.VS_LIGHT_GREY, border_thickness=1):
+        if border_type == "solid":
+            self.border_type = border_type
+        else:
+            self.border_type = "none"
+        self.border_color = border_color
+        self.border_thickness = border_thickness
 
     def set_font(self, font_type="Ubuntu", font_size=24, font_color=cfg.GREEN):
         self.font_type = font_type
@@ -47,8 +59,9 @@ class Surface:
         self.active = False
 
     def draw_border(self):
-        pass
-
+        if self.border_type == "solid":
+            draw.rectangle(self.surface, (self.x, self.y), self.width, self.height, self.border_thickness, self.border_color)
+    
     def draw_text(self):
         for i, line in enumerate(self.text):
             draw.text(self.surface, line, (self.margin_x, self.margin_y + (i * (self.font.get_height() + self.line_spacing))), self.font_size, self.font_color)
@@ -72,7 +85,7 @@ class Surface:
         self.draw_cursor()
         screen.blit(self.surface, (self.x, self.y))
 
-    def handle_event(self, events, capslock):
+    def handle_event(self, events):
         # If the surface is not active, just update and draw the text
         if self.active == False:
             self.draw(self.surface)
@@ -84,9 +97,47 @@ class Surface:
                 if event.key == pygame.K_ESCAPE:
                     pass
                 elif event.key == pygame.K_BACKSPACE:
-                    pass
+                    if self.cursor[1] > 0:
+                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
+                        self.cursor[1] -= 1
+                    elif self.cursor[0] > 0:
+                        # Merge with the previous line
+                        self.cursor[1] = len(self.text[self.cursor[0] - 1])
+                        self.text[self.cursor[0] - 1] += self.text[self.cursor[0]]
+                        del self.text[self.cursor[0]]
+                        self.cursor[0] -= 1
                 elif event.key == pygame.K_RETURN:
-                    pass
+                    if self.cursor[1] == len(self.text[self.cursor[0]]):
+                        self.text.insert(self.cursor[0]+1, "")
+                    else:
+                        self.text.insert(self.cursor[0]+1, self.text[self.cursor[0]][self.cursor[1]:])
+                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
+                    self.cursor[0] += 1
+                    self.cursor[1] = 0
+                elif event.key == pygame.K_UP:
+                    if self.cursor[0] > 0:
+                        if len(self.text[self.cursor[0]-1]) < self.cursor[1]:
+                            self.cursor[1] = len(self.text[self.cursor[0]])
+                        self.cursor[0] -= 1
+                elif event.key == pygame.K_DOWN:
+                    if self.cursor[0] < len(self.text)-1:
+                        if len(self.text[self.cursor[0]+1]) < self.cursor[1]:
+                            self.cursor[1] = len(self.text[self.cursor[0]])
+                        self.cursor[0] += 1
+                elif event.key == pygame.K_LEFT:
+                    if self.cursor[1] == 0:
+                        if self.cursor[0] > 0:
+                            self.cursor[0] -= 1
+                            self.cursor[1] = len(self.text[self.cursor[0]])
+                    else:
+                        self.cursor[1] -= 1
+                elif event.key == pygame.K_RIGHT:
+                    if self.cursor[1] == len(self.text[self.cursor[0]]):
+                        if self.cursor[0] < len(self.text)-1:
+                            self.cursor[0] += 1
+                            self.cursor[1] = 0
+                    else:
+                        self.cursor[1] += 1
                 else:
                     self.cursor = [self.cursor[0], self.cursor[1] + 1]
                     self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]

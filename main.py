@@ -33,6 +33,7 @@ def main():
     text_editor_rect = (0, 0, WIDTH - cfg.WINDOW_OFFSET_X, HEIGHT - cfg.WINDOW_OFFSET_Y)
     text_editor_surface = text_editor.Surface(text_editor_rect)
     text_editor_surface.set_active()
+    text_editor_surface.set_border()
 
     # Game loop
     while running:
@@ -45,11 +46,9 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                elif event.key == pygame.K_CAPSLOCK:
-                    capslock = not capslock
         
         # Pass events to surfaces
-        text_editor_surface.handle_event(events, capslock)
+        text_editor_surface.handle_event(events)
 
         # Drawing to screen
         screen.fill(cfg.WHITE)
