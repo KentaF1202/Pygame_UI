@@ -1,3 +1,6 @@
+# TODO
+# Finish mouse_to_cursor, delete_highlight, and draw_highlight
+
 # File Imports
 import pygame
 
@@ -102,12 +105,17 @@ class Surface:
     def draw(self, screen):
         self.surface.fill(self.background_color)
         self.draw_border()
-        self.update_highlight()
         self.draw_highlight()
         self.draw_text()
         self.draw_cursor()
         #draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
         screen.blit(self.surface, (self.x, self.y))
+
+    def mouse_to_cursor(self, mouse_pos):
+        pass
+
+    def delete_highlight(self):
+        pass
 
     def press_left(self):
         if self.cursor[1] == 0:
@@ -116,6 +124,9 @@ class Surface:
                 self.cursor[1] = len(self.text[self.cursor[0]])
         else:
             self.cursor[1] -= 1
+        
+        if self.highlight_mode:
+            self.highlight_end = self.cursor
 
     def press_right(self):
         if self.cursor[1] == len(self.text[self.cursor[0]]):
@@ -124,20 +135,32 @@ class Surface:
                 self.cursor[1] = 0
         else:
             self.cursor[1] += 1
+        
+        if self.highlight_mode:
+            self.highlight_end = self.cursor
 
     def press_up(self):
         if self.cursor[0] > 0:
             if len(self.text[self.cursor[0]-1]) < self.cursor[1]:
                 self.cursor[1] = len(self.text[self.cursor[0]-1])
             self.cursor[0] -= 1
+        
+        if self.highlight_mode:
+            self.highlight_end = self.cursor
 
     def press_down(self):
         if self.cursor[0] < len(self.text)-1:
             if len(self.text[self.cursor[0]+1]) < self.cursor[1]:
                 self.cursor[1] = len(self.text[self.cursor[0]+1])
             self.cursor[0] += 1
+        
+        if self.highlight_mode:
+            self.highlight_end = self.cursor
 
     def press_enter(self):
+        if self.highlight_mode:
+            self.delete_highlight()
+
         if self.cursor[1] == len(self.text[self.cursor[0]]):
             self.text.insert(self.cursor[0]+1, "")
         else:
@@ -147,6 +170,9 @@ class Surface:
         self.cursor[1] = 0
 
     def press_backspace(self):
+        if self.highlight_mode:
+            self.delete_highlight()
+
         if self.cursor[1] > 0:
             self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
             self.cursor[1] -= 1
@@ -158,10 +184,16 @@ class Surface:
             self.cursor[0] -= 1
 
     def press_character(self, event):
+        if self.highlight_mode:
+            self.delete_highlight()
+
         self.cursor = [self.cursor[0], self.cursor[1] + 1]
         self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
 
     def paste(self):
+        if self.highlight_mode:
+            self.delete_highlight()
+
         self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
 
         if self.clipboard_text:
@@ -204,13 +236,20 @@ class Surface:
         # If the surface is active, handle events
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self.cursor = self.mouse_to_cursor(mouse_pos)
                 self.highlight_mode = True
+                self.highlight_start = self.cursor
+                self.highlight_end = self.cursor
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.highlight_mode = False
 
             elif event.type == pygame.MOUSEMOTION:
-                pass
+                if self.highlight_mode:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self.cursor = self.mouse_to_cursor(mouse_pos)
+                    self.highlight_end = self.cursor
 
             elif event.type == pygame.KEYDOWN:
                 if event.mod & pygame.KMOD_CTRL: # Check if Control key is held down
@@ -240,6 +279,8 @@ class Surface:
                     self.press_right()
                 elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.highlight_mode = True
+                    self.highlight_start = self.cursor
+                    self.highlight_end = self.cursor
                 else:
                     self.press_character(event)
             
