@@ -7,7 +7,6 @@ import draw
 
 # Initialize Pygame And Its Modules
 pygame.init()  
-pygame.scrap.init()
 pygame.key.set_repeat(250,50)  # Set key repeat delay and interval
 
 # Class for the Text Editor Surface
@@ -25,6 +24,9 @@ class Surface:
         self.placeholder_text = placeholder_text
         self.clipboard_text = ""
         self.active = False
+        self.highlight_mode = False
+        self.shift_start = [0,0]
+        self.shift_end = [0,0]
         self.cursor_visible = True
         self.cursor = [0, 0]
         self.font_type = cfg.text_font_type
@@ -59,6 +61,9 @@ class Surface:
     def set_inactive(self):
         self.active = False
 
+    def update_highlight(self):
+        pass
+
     def draw_border(self):
         if self.border_type == "solid":
             draw.rectangle(self.surface, (0, 0), self.width, self.height, self.border_thickness, self.border_color)
@@ -77,12 +82,17 @@ class Surface:
             cursor_y = self.margin_y + (self.cursor[0] * (self.font.get_height() + self.line_spacing))
             draw.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
 
+    def draw_highlight(self):
+        pass
+
     def draw(self, screen):
         self.surface.fill(self.background_color)
         self.draw_border()
+        self.update_highlight()
+        self.draw_highlight()
         self.draw_text()
         self.draw_cursor()
-        #draw.text(self.surface, f"Cursor: [{self.cursor[0]}, {self.cursor[1]}]", (600, 600), 50)
+        draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
         screen.blit(self.surface, (self.x, self.y))
 
     def handle_event(self, events):
@@ -94,6 +104,12 @@ class Surface:
         # If the surface is active, handle events
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
+                self.highlight_mode = True
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.highlight_mode = False
+
+            elif event.type == pygame.MOUSEMOTION:
                 pass
 
             elif event.type == pygame.KEYDOWN:
@@ -106,19 +122,26 @@ class Surface:
                         pass
                     if event.key == pygame.K_v:
                         self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
-                        print(f"Clipboard text: {self.clipboard_text}")
                         if self.clipboard_text:
                             try:
                                 for t in pygame.scrap.get_types():
-                                    print(f"DEBUG: Clipboard type: {t}\n")
+                                    #print(f"DEBUG: Clipboard type: {t}\n")
                                     pasted_text = self.clipboard_text.decode('utf-8')
                                     pasted_text = pasted_text.replace('\x0d', '')
                                     pasted_text = pasted_text.replace('\x00', '')
-                                    pasted_text_length = len(pasted_text)
-
-                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + pasted_text + self.text[self.cursor[0]][self.cursor[1]:]
-
-                                self.cursor[1] += pasted_text_length
+                                # Splicing the string to insert the text in between
+                                end_of_text = self.text[self.cursor[0]][self.cursor[1]:]
+                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
+                                for c in pasted_text:
+                                    if ord(c) == 10:  # New line character or LF (Line Feed)
+                                        self.text.insert(self.cursor[0]+1, "")
+                                        self.cursor[0] += 1
+                                        self.cursor[1] = 0
+                                    else:
+                                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + c
+                                        self.cursor[1] += 1
+                                # Attaching the remenants of the string
+                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + end_of_text
                             except UnicodeDecodeError:
                                 print("Could not decode clipboard data as UTF-8")
                             except Exception as e:
@@ -169,10 +192,16 @@ class Surface:
                             self.cursor[1] = 0
                     else:
                         self.cursor[1] += 1
+                elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                    self.highlight_mode = True
                 else:
                     self.cursor = [self.cursor[0], self.cursor[1] + 1]
                     self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
-    
+            
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                    self.highlight_mode = False
+
         # Draw the updated surface
         self.draw(self.surface)
         return self.text

@@ -11,7 +11,6 @@ import text_editor
 # Pygame Initialization
 pygame.init()
 
-
 # Screen Variables
 screen_info = pygame.display.Info()
 WIDTH = screen_info.current_w
@@ -23,6 +22,7 @@ pygame.display.set_caption("Pygame UI")
 # Clock for controlling the frame rate
 clock = pygame.time.Clock()
 
+# Scrap Initialization
 pygame.scrap.init()
 
 # Collision Function
