@@ -115,7 +115,28 @@ class Surface:
         pass
 
     def delete_highlight(self):
-        pass
+        # Swapping positions to make start always have earlier position within text
+        if (self.highlight_end[0] >= self.highlight_start[0] and self.highlight_end[1] > self.highlight_start[1]):
+            pass
+        else:
+            temp = self.highlight_start
+            self.highlight_start = self.highlight_end
+            self.highlight_end = temp
+
+        # Splicing text for later
+        beginning = self.text[self.highlight_start[0]][:self.highlight_mode[1]]
+        end = self.text[self.highlight_end[0]][self.highlight_end:]
+
+        # Deleting rows inside of text
+        for i in range(self.highlight_start[0], self.highlight_end[0]):
+            del self.text[i]
+        
+        # Splicing text back together
+        self.text.insert(self.highlight_start[0], beginning + end)
+        
+        # Reseting highlight variables
+        self.highlight_end = self.highlight_start
+        self.highlight_mode = False
 
     def press_left(self):
         if self.cursor[1] == 0:
