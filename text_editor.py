@@ -8,7 +8,7 @@ import draw
 # Initialize Pygame And Its Modules
 pygame.init()  
 pygame.scrap.init()
-pygame.key.set_repeat(500, 100)  # Set key repeat delay and interval
+pygame.key.set_repeat(250,50)  # Set key repeat delay and interval
 
 # Class for the Text Editor Surface
 class Surface:
@@ -23,6 +23,7 @@ class Surface:
         self.line_spacing = cfg.text_line_spacing
         self.text = [""]
         self.placeholder_text = placeholder_text
+        self.clipboard_text = ""
         self.active = False
         self.cursor_visible = True
         self.cursor = [0, 0]
@@ -60,7 +61,7 @@ class Surface:
 
     def draw_border(self):
         if self.border_type == "solid":
-            draw.rectangle(self.surface, (self.x, self.y), self.width, self.height, self.border_thickness, self.border_color)
+            draw.rectangle(self.surface, (0, 0), self.width, self.height, self.border_thickness, self.border_color)
     
     def draw_text(self):
         for i, line in enumerate(self.text):
@@ -74,8 +75,6 @@ class Surface:
         if (pygame.time.get_ticks() % 1000 < 500):
             cursor_x = self.margin_x + (self.font.size(self.text[self.cursor[0]][:self.cursor[1]])[0])
             cursor_y = self.margin_y + (self.cursor[0] * (self.font.get_height() + self.line_spacing))
-            print(f"font: {self.font}")
-            print(f"font height: {self.font.get_height()}")
             draw.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
 
     def draw(self, screen):
@@ -83,6 +82,7 @@ class Surface:
         self.draw_border()
         self.draw_text()
         self.draw_cursor()
+        #draw.text(self.surface, f"Cursor: [{self.cursor[0]}, {self.cursor[1]}]", (600, 600), 50)
         screen.blit(self.surface, (self.x, self.y))
 
     def handle_event(self, events):
@@ -93,8 +93,39 @@ class Surface:
         
         # If the surface is active, handle events
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pass
+
+            elif event.type == pygame.KEYDOWN:
+                if event.mod & pygame.KMOD_CTRL: # Check if Control key is held down
+                    if event.key == pygame.K_UP:
+                        pass
+                    if event.key == pygame.K_DOWN:
+                        pass
+                    if event.key == pygame.K_c:
+                        pass
+                    if event.key == pygame.K_v:
+                        self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
+                        print(f"Clipboard text: {self.clipboard_text}")
+                        if self.clipboard_text:
+                            try:
+                                for t in pygame.scrap.get_types():
+                                    print(f"DEBUG: Clipboard type: {t}\n")
+                                    pasted_text = self.clipboard_text.decode('utf-8')
+                                    pasted_text = pasted_text.replace('\x0d', '')
+                                    pasted_text = pasted_text.replace('\x00', '')
+                                    pasted_text_length = len(pasted_text)
+
+                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + pasted_text + self.text[self.cursor[0]][self.cursor[1]:]
+
+                                self.cursor[1] += pasted_text_length
+                            except UnicodeDecodeError:
+                                print("Could not decode clipboard data as UTF-8")
+                            except Exception as e:
+                                print(f"An unexpected error occured during paste: {e}")
+                    if event.key == pygame.K_x:
+                        pass
+                elif event.key == pygame.K_ESCAPE:
                     pass
                 elif event.key == pygame.K_BACKSPACE:
                     if self.cursor[1] > 0:
@@ -117,12 +148,12 @@ class Surface:
                 elif event.key == pygame.K_UP:
                     if self.cursor[0] > 0:
                         if len(self.text[self.cursor[0]-1]) < self.cursor[1]:
-                            self.cursor[1] = len(self.text[self.cursor[0]])
+                            self.cursor[1] = len(self.text[self.cursor[0]-1])
                         self.cursor[0] -= 1
                 elif event.key == pygame.K_DOWN:
                     if self.cursor[0] < len(self.text)-1:
                         if len(self.text[self.cursor[0]+1]) < self.cursor[1]:
-                            self.cursor[1] = len(self.text[self.cursor[0]])
+                            self.cursor[1] = len(self.text[self.cursor[0]+1])
                         self.cursor[0] += 1
                 elif event.key == pygame.K_LEFT:
                     if self.cursor[1] == 0:
@@ -141,7 +172,7 @@ class Surface:
                 else:
                     self.cursor = [self.cursor[0], self.cursor[1] + 1]
                     self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
-
+    
         # Draw the updated surface
         self.draw(self.surface)
         return self.text
