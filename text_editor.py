@@ -5,38 +5,55 @@ import pygame
 import configs as cfg
 import draw
 
-# Initialize Pygame And Its Modules
+# Initialize Pygame
 pygame.init()  
-pygame.key.set_repeat(250,50)  # Set key repeat delay and interval
+
+# Set key repeat delay and interval
+pygame.key.set_repeat(250,50)  
 
 # Class for the Text Editor Surface
 class Surface:
     def __init__(self, rect, placeholder_text=""):
+        # Dimensions
         self.x = rect[0]
         self.y = rect[1]
         self.width = rect[2]
         self.height = rect[3]
+        
+        # Surface
         self.surface = pygame.Surface((self.width, self.height))
-        self.margin_x = cfg.text_margin_x
-        self.margin_y = cfg.text_margin_y
-        self.line_spacing = cfg.text_line_spacing
+        self.background_color = cfg.BLACK
+        self.active = False
+
+        # Border
+        self.border_type = "none"
+        self.border_color = cfg.VS_LIGHT_GREY
+        self.border_thickness = 1
+
+        # Text 
         self.text = [""]
         self.placeholder_text = placeholder_text
         self.clipboard_text = ""
-        self.active = False
-        self.highlight_mode = False
-        self.shift_start = [0,0]
-        self.shift_end = [0,0]
-        self.cursor_visible = True
-        self.cursor = [0, 0]
+
+        # Font
         self.font_type = cfg.text_font_type
         self.font_size = cfg.text_font_size
         self.font = cfg.text_font
         self.font_color = cfg.GREEN
-        self.background_color = cfg.BLACK
-        self.border_type = "none"
-        self.border_color = cfg.VS_LIGHT_GREY
-        self.border_thickness = 1
+
+        # Text Spacing
+        self.margin_x = cfg.text_margin_x
+        self.margin_y = cfg.text_margin_y
+        self.line_spacing = cfg.text_line_spacing
+
+        # Cursor
+        self.cursor_visible = True
+        self.cursor = [0, 0]
+
+        # Highlight
+        self.highlight_mode = False
+        self.highlight_start = [0,0]
+        self.highlight_end = [0,0]
 
     def set_background_color(self, color):
         self.background_color = color
@@ -60,9 +77,6 @@ class Surface:
 
     def set_inactive(self):
         self.active = False
-
-    def update_highlight(self):
-        pass
 
     def draw_border(self):
         if self.border_type == "solid":
@@ -92,8 +106,94 @@ class Surface:
         self.draw_highlight()
         self.draw_text()
         self.draw_cursor()
-        draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
+        #draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
         screen.blit(self.surface, (self.x, self.y))
+
+    def press_left(self):
+        if self.cursor[1] == 0:
+            if self.cursor[0] > 0:
+                self.cursor[0] -= 1
+                self.cursor[1] = len(self.text[self.cursor[0]])
+        else:
+            self.cursor[1] -= 1
+
+    def press_right(self):
+        if self.cursor[1] == len(self.text[self.cursor[0]]):
+            if self.cursor[0] < len(self.text)-1:
+                self.cursor[0] += 1
+                self.cursor[1] = 0
+        else:
+            self.cursor[1] += 1
+
+    def press_up(self):
+        if self.cursor[0] > 0:
+            if len(self.text[self.cursor[0]-1]) < self.cursor[1]:
+                self.cursor[1] = len(self.text[self.cursor[0]-1])
+            self.cursor[0] -= 1
+
+    def press_down(self):
+        if self.cursor[0] < len(self.text)-1:
+            if len(self.text[self.cursor[0]+1]) < self.cursor[1]:
+                self.cursor[1] = len(self.text[self.cursor[0]+1])
+            self.cursor[0] += 1
+
+    def press_enter(self):
+        if self.cursor[1] == len(self.text[self.cursor[0]]):
+            self.text.insert(self.cursor[0]+1, "")
+        else:
+            self.text.insert(self.cursor[0]+1, self.text[self.cursor[0]][self.cursor[1]:])
+            self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
+        self.cursor[0] += 1
+        self.cursor[1] = 0
+
+    def press_backspace(self):
+        if self.cursor[1] > 0:
+            self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
+            self.cursor[1] -= 1
+        elif self.cursor[0] > 0:
+            # Merge with the previous line
+            self.cursor[1] = len(self.text[self.cursor[0] - 1])
+            self.text[self.cursor[0] - 1] += self.text[self.cursor[0]]
+            del self.text[self.cursor[0]]
+            self.cursor[0] -= 1
+
+    def press_character(self, event):
+        self.cursor = [self.cursor[0], self.cursor[1] + 1]
+        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
+
+    def paste(self):
+        self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
+
+        if self.clipboard_text:
+            try:
+                # Splicing the string to insert the text in between
+                end_of_text = self.text[self.cursor[0]][self.cursor[1]:]
+                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
+
+                # Processing the clipboard text
+                for t in pygame.scrap.get_types():
+                    #print(f"DEBUG: Clipboard type: {t}\n")
+                    pasted_text = self.clipboard_text.decode('utf-8')
+                    pasted_text = pasted_text.replace('\x0d', '')
+                    pasted_text = pasted_text.replace('\x00', '')
+
+                # Parsing the clipboard text
+                for c in pasted_text:
+                    if ord(c) == 10:  # New line character or LF (Line Feed)
+                        self.text.insert(self.cursor[0]+1, "")
+                        self.cursor[0] += 1
+                        self.cursor[1] = 0
+                    else:
+                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + c
+                        self.cursor[1] += 1
+
+                # Reattaching the remenants of the string
+                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + end_of_text
+    
+            except UnicodeDecodeError:
+                print("Could not decode clipboard data as UTF-8")
+            except Exception as e:
+                print(f"An unexpected error occured during paste: {e}")
 
     def handle_event(self, events):
         # If the surface is not active, just update and draw the text
@@ -121,82 +221,27 @@ class Surface:
                     if event.key == pygame.K_c:
                         pass
                     if event.key == pygame.K_v:
-                        self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
-                        if self.clipboard_text:
-                            try:
-                                for t in pygame.scrap.get_types():
-                                    #print(f"DEBUG: Clipboard type: {t}\n")
-                                    pasted_text = self.clipboard_text.decode('utf-8')
-                                    pasted_text = pasted_text.replace('\x0d', '')
-                                    pasted_text = pasted_text.replace('\x00', '')
-                                # Splicing the string to insert the text in between
-                                end_of_text = self.text[self.cursor[0]][self.cursor[1]:]
-                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
-                                for c in pasted_text:
-                                    if ord(c) == 10:  # New line character or LF (Line Feed)
-                                        self.text.insert(self.cursor[0]+1, "")
-                                        self.cursor[0] += 1
-                                        self.cursor[1] = 0
-                                    else:
-                                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + c
-                                        self.cursor[1] += 1
-                                # Attaching the remenants of the string
-                                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + end_of_text
-                            except UnicodeDecodeError:
-                                print("Could not decode clipboard data as UTF-8")
-                            except Exception as e:
-                                print(f"An unexpected error occured during paste: {e}")
+                        self.paste()
                     if event.key == pygame.K_x:
                         pass
                 elif event.key == pygame.K_ESCAPE:
                     pass
                 elif event.key == pygame.K_BACKSPACE:
-                    if self.cursor[1] > 0:
-                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
-                        self.cursor[1] -= 1
-                    elif self.cursor[0] > 0:
-                        # Merge with the previous line
-                        self.cursor[1] = len(self.text[self.cursor[0] - 1])
-                        self.text[self.cursor[0] - 1] += self.text[self.cursor[0]]
-                        del self.text[self.cursor[0]]
-                        self.cursor[0] -= 1
+                    self.press_backspace()
                 elif event.key == pygame.K_RETURN:
-                    if self.cursor[1] == len(self.text[self.cursor[0]]):
-                        self.text.insert(self.cursor[0]+1, "")
-                    else:
-                        self.text.insert(self.cursor[0]+1, self.text[self.cursor[0]][self.cursor[1]:])
-                        self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
-                    self.cursor[0] += 1
-                    self.cursor[1] = 0
+                    self.press_enter()
                 elif event.key == pygame.K_UP:
-                    if self.cursor[0] > 0:
-                        if len(self.text[self.cursor[0]-1]) < self.cursor[1]:
-                            self.cursor[1] = len(self.text[self.cursor[0]-1])
-                        self.cursor[0] -= 1
+                    self.press_up()
                 elif event.key == pygame.K_DOWN:
-                    if self.cursor[0] < len(self.text)-1:
-                        if len(self.text[self.cursor[0]+1]) < self.cursor[1]:
-                            self.cursor[1] = len(self.text[self.cursor[0]+1])
-                        self.cursor[0] += 1
+                    self.press_down()
                 elif event.key == pygame.K_LEFT:
-                    if self.cursor[1] == 0:
-                        if self.cursor[0] > 0:
-                            self.cursor[0] -= 1
-                            self.cursor[1] = len(self.text[self.cursor[0]])
-                    else:
-                        self.cursor[1] -= 1
+                    self.press_left()
                 elif event.key == pygame.K_RIGHT:
-                    if self.cursor[1] == len(self.text[self.cursor[0]]):
-                        if self.cursor[0] < len(self.text)-1:
-                            self.cursor[0] += 1
-                            self.cursor[1] = 0
-                    else:
-                        self.cursor[1] += 1
+                    self.press_right()
                 elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.highlight_mode = True
                 else:
-                    self.cursor = [self.cursor[0], self.cursor[1] + 1]
-                    self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
+                    self.press_character(event)
             
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
