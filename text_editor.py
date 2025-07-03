@@ -95,22 +95,43 @@ class Surface:
             return
 
         if (pygame.time.get_ticks() % 1000 < 500):
-            cursor_x = self.margin_x + (self.font.size(self.text[self.cursor[0]][:self.cursor[1]])[0])
-            cursor_y = self.margin_y + (self.cursor[0] * (self.font.get_height() + self.line_spacing))
+            cursor_x, cursor_y = self.cursor_to_coords(self.cursor[0], self.cursor[1])
             draw.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
 
     def draw_highlight(self):
-        pass
+        # Start is start, end is end
+        if (self.highlight_end[0] >= self.highlight_start[0] and self.highlight_end[1] > self.highlight_start[1]):
+            if (self.highlight_start[0] == self.highlight_end[0]):
+                cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
+                cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
+                draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
 
+        # Start is end, end is start
+        else:
+            if (self.highlight_end[0] == self.highlight_start[0]):
+                cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
+                cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
+                draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+
+        
     def draw(self, screen):
         self.surface.fill(self.background_color)
         self.draw_border()
         self.draw_highlight()
         self.draw_text()
         self.draw_cursor()
-        #draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
+        draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
+        draw.text(self.surface, f"Highlight start: {self.highlight_start}", (100, 500))
+        draw.text(self.surface, f"Highlight end: {self.highlight_end}", (100, 600))
+        draw.text(self.surface, f"Cursor: {self.cursor}", (100, 700))
+
         screen.blit(self.surface, (self.x, self.y))
 
+    def cursor_to_coords(self, row, col):
+        cursor_x = self.margin_x + self.font.size(self.text[row][:col])[0]
+        cursor_y = self.margin_y + (row * (self.font.get_height() + self.line_spacing))
+        return cursor_x, cursor_y
+    
     def mouse_to_cursor(self, mouse_pos):
         pass
 
@@ -119,9 +140,9 @@ class Surface:
         if (self.highlight_end[0] >= self.highlight_start[0] and self.highlight_end[1] > self.highlight_start[1]):
             pass
         else:
-            temp = self.highlight_start
-            self.highlight_start = self.highlight_end
-            self.highlight_end = temp
+            temp = self.highlight_start.copy()
+            self.highlight_start = self.highlight_end.copy()
+            self.highlight_end = temp.copy()
 
         # Splicing text for later
         beginning = self.text[self.highlight_start[0]][:self.highlight_mode[1]]
@@ -135,7 +156,7 @@ class Surface:
         self.text.insert(self.highlight_start[0], beginning + end)
         
         # Reseting highlight variables
-        self.highlight_end = self.highlight_start
+        self.highlight_end = self.highlight_start.copy()
         self.highlight_mode = False
 
     def press_left(self):
@@ -146,8 +167,8 @@ class Surface:
         else:
             self.cursor[1] -= 1
         
-        if self.highlight_mode:
-            self.highlight_end = self.cursor
+        if self.highlight_mode == True:
+            self.highlight_end = self.cursor.copy()
 
     def press_right(self):
         if self.cursor[1] == len(self.text[self.cursor[0]]):
@@ -158,7 +179,7 @@ class Surface:
             self.cursor[1] += 1
         
         if self.highlight_mode:
-            self.highlight_end = self.cursor
+            self.highlight_end = self.cursor.copy()
 
     def press_up(self):
         if self.cursor[0] > 0:
@@ -167,7 +188,7 @@ class Surface:
             self.cursor[0] -= 1
         
         if self.highlight_mode:
-            self.highlight_end = self.cursor
+            self.highlight_end = self.cursor.copy()
 
     def press_down(self):
         if self.cursor[0] < len(self.text)-1:
@@ -176,7 +197,7 @@ class Surface:
             self.cursor[0] += 1
         
         if self.highlight_mode:
-            self.highlight_end = self.cursor
+            self.highlight_end = self.cursor.copy()
 
     def press_enter(self):
         if self.highlight_mode:
@@ -260,8 +281,8 @@ class Surface:
                 mouse_pos = pygame.mouse.get_pos()
                 self.cursor = self.mouse_to_cursor(mouse_pos)
                 self.highlight_mode = True
-                self.highlight_start = self.cursor
-                self.highlight_end = self.cursor
+                self.highlight_start = self.cursor.copy()
+                self.highlight_end = self.cursor.copy()
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.highlight_mode = False
@@ -300,8 +321,9 @@ class Surface:
                     self.press_right()
                 elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.highlight_mode = True
-                    self.highlight_start = self.cursor
-                    self.highlight_end = self.cursor
+                    if self.highlight_start == self.highlight_end:
+                        self.highlight_start = self.cursor.copy()
+                        self.highlight_end = self.cursor.copy()
                 else:
                     self.press_character(event)
             
