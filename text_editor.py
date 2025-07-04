@@ -99,20 +99,53 @@ class Surface:
             draw.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
 
     def draw_highlight(self):
-        # Start is start, end is end
-        if (self.highlight_end[0] >= self.highlight_start[0] and self.highlight_end[1] > self.highlight_start[1]):
-            if (self.highlight_start[0] == self.highlight_end[0]):
+        # If on same row
+        if (self.highlight_start[0] == self.highlight_end[0]):
+            # If start comes first
+            if (self.highlight_start[1] < self.highlight_end[1]):
                 cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
                 cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
+                draw.text(self.surface, f"SL: x, y, width, height: {cursor_x1}, {cursor_y1}, {cursor_x2-cursor_x1}, {self.font.get_height()}", (400,0), 40, cfg.GREEN)
                 draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
-
-        # Start is end, end is start
-        else:
-            if (self.highlight_end[0] == self.highlight_start[0]):
+            # If end comes first
+            else:
                 cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
                 cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
                 draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+        # Not on same row, if start comes first
+        elif (self.highlight_start[0] < self.highlight_end[0]):
+            cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
+            cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], len(self.text[self.highlight_start[0]]))
+            draw.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (400,150), 40, cfg.GREEN)
+            draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
 
+            for i in range(self.highlight_start[0]+1, self.highlight_end[0]):
+                cursor_x1, cursor_y1 = self.cursor_to_coords(i, 0)
+                cursor_x2, _ = self.cursor_to_coords(i, len(self.text[i]))
+                draw.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (600,i*50), 40, cfg.GREEN)
+                draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+
+            cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], 0)
+            cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
+            draw.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (400,200), 40, cfg.GREEN)
+            draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+       
+        elif (self.highlight_end[0] < self.highlight_start[0]):
+            cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
+            cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], len(self.text[self.highlight_end[0]]))
+            draw.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (400,150), 40, cfg.GREEN)
+            draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+
+            for i in range(self.highlight_end[0]+1, self.highlight_start[0]):
+                cursor_x1, cursor_y1 = self.cursor_to_coords(i, 0)
+                cursor_x2, _ = self.cursor_to_coords(i, len(self.text[i]))
+                draw.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (600,i*50), 40, cfg.GREEN)
+                draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+
+            cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], 0)
+            cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
+            draw.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.font.get_height()}", (400,200), 40, cfg.GREEN)
+            draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)           
         
     def draw(self, screen):
         self.surface.fill(self.background_color)
@@ -121,8 +154,8 @@ class Surface:
         self.draw_text()
         self.draw_cursor()
         draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
-        draw.text(self.surface, f"Highlight start: {self.highlight_start}", (100, 500))
-        draw.text(self.surface, f"Highlight end: {self.highlight_end}", (100, 600))
+        draw.text(self.surface, f"Highlight start: {self.highlight_start[0]}, {self.highlight_start[1]}", (100, 500))
+        draw.text(self.surface, f"Highlight end: {self.highlight_end[0]}, {self.highlight_end[1]}", (100, 600))
         draw.text(self.surface, f"Cursor: {self.cursor}", (100, 700))
 
         screen.blit(self.surface, (self.x, self.y))
@@ -137,27 +170,33 @@ class Surface:
 
     def delete_highlight(self):
         # Swapping positions to make start always have earlier position within text
-        if (self.highlight_end[0] >= self.highlight_start[0] and self.highlight_end[1] > self.highlight_start[1]):
+        if (self.highlight_start[0] < self.highlight_end[0]):
             pass
-        else:
-            temp = self.highlight_start.copy()
-            self.highlight_start = self.highlight_end.copy()
-            self.highlight_end = temp.copy()
+        elif (self.highlight_start[0] == self.highlight_end[0]):
+            if (self.highlight_start[1] < self.highlight_end[1]):
+                pass
+            else:
+                temp = self.highlight_start.copy()
+                self.highlight_start = self.highlight_end.copy()
+                self.highlight_end = temp.copy()
 
         # Splicing text for later
-        beginning = self.text[self.highlight_start[0]][:self.highlight_mode[1]]
-        end = self.text[self.highlight_end[0]][self.highlight_end:]
+        beginning = self.text[self.highlight_start[0]][:self.highlight_start[1]]
+        end = self.text[self.highlight_end[0]][self.highlight_end[1]:]
 
         # Deleting rows inside of text
-        for i in range(self.highlight_start[0], self.highlight_end[0]):
+        for i in range(self.highlight_end[0] - 1, self.highlight_start[0] - 1, -1):
+            print(f"Row: {i}, Text: {self.text[i]}")
             del self.text[i]
         
         # Splicing text back together
         self.text.insert(self.highlight_start[0], beginning + end)
         
-        # Reseting highlight variables
+        # Reseting variables
+        self.cursor = self.highlight_start.copy()
         self.highlight_end = self.highlight_start.copy()
         self.highlight_mode = False
+
 
     def press_left(self):
         if self.cursor[1] == 0:
@@ -200,7 +239,7 @@ class Surface:
             self.highlight_end = self.cursor.copy()
 
     def press_enter(self):
-        if self.highlight_mode:
+        if self.highlight_start != self.highlight_end:
             self.delete_highlight()
 
         if self.cursor[1] == len(self.text[self.cursor[0]]):
@@ -212,28 +251,28 @@ class Surface:
         self.cursor[1] = 0
 
     def press_backspace(self):
-        if self.highlight_mode:
+        if self.highlight_start != self.highlight_end:
             self.delete_highlight()
-
-        if self.cursor[1] > 0:
-            self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
-            self.cursor[1] -= 1
-        elif self.cursor[0] > 0:
-            # Merge with the previous line
-            self.cursor[1] = len(self.text[self.cursor[0] - 1])
-            self.text[self.cursor[0] - 1] += self.text[self.cursor[0]]
-            del self.text[self.cursor[0]]
-            self.cursor[0] -= 1
+        else:
+            if self.cursor[1] > 0:
+                self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1] - 1] + self.text[self.cursor[0]][self.cursor[1]:]
+                self.cursor[1] -= 1
+            elif self.cursor[0] > 0:
+                # Merge with the previous line
+                self.cursor[1] = len(self.text[self.cursor[0] - 1])
+                self.text[self.cursor[0] - 1] += self.text[self.cursor[0]]
+                del self.text[self.cursor[0]]
+                self.cursor[0] -= 1
 
     def press_character(self, event):
-        if self.highlight_mode:
+        if self.highlight_start != self.highlight_end:
             self.delete_highlight()
 
         self.cursor = [self.cursor[0], self.cursor[1] + 1]
         self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
 
     def paste(self):
-        if self.highlight_mode:
+        if self.highlight_start != self.highlight_end:
             self.delete_highlight()
 
         self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
@@ -321,9 +360,8 @@ class Surface:
                     self.press_right()
                 elif event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.highlight_mode = True
-                    if self.highlight_start == self.highlight_end:
-                        self.highlight_start = self.cursor.copy()
-                        self.highlight_end = self.cursor.copy()
+                    self.highlight_start = self.cursor.copy()
+                    self.highlight_end = self.cursor.copy()
                 else:
                     self.press_character(event)
             
