@@ -185,6 +185,10 @@ class Surface:
                 temp = self.highlight_start.copy()
                 self.highlight_start = self.highlight_end.copy()
                 self.highlight_end = temp.copy()
+        else:
+            temp = self.highlight_start.copy()
+            self.highlight_start = self.highlight_end.copy()
+            self.highlight_end = temp.copy()
 
         # Splicing text for later
         beginning = self.text[self.highlight_start[0]][:self.highlight_start[1]]
