@@ -345,6 +345,16 @@ class Surface:
         except Exception as e:
             print(f"An unexpected error occured during paste: {e}")
 
+    def select_all(self):
+        self.highlight_start = [0,0]
+        self.highlight_end = [len(self.text)-1, len(self.text[len(self.text)-1])]
+        
+        if self.highlight_start != self.highlight_end:
+            self.highlight_mode = True 
+        else:
+            self.highlight_mode = False
+        self.cursor = self.highlight_end
+
     def handle_event(self, events):
         # If the surface is not active, just return text
         if self.active == False:
@@ -378,6 +388,8 @@ class Surface:
                         pass
                     if event.key == pygame.K_DOWN:
                         pass
+                    if event.key == pygame.K_a:
+                        self.select_all()
                     if event.key == pygame.K_c:
                         pass
                     if event.key == pygame.K_v:
