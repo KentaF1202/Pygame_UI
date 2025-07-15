@@ -16,7 +16,7 @@ pygame.key.set_repeat(250,50)
 
 # Class for the Text Editor Surface
 class Surface:
-    def __init__(self, rect, placeholder_text=""):
+    def __init__(self, rect):
         # Dimensions
         self.x = rect[0]
         self.y = rect[1]
@@ -35,7 +35,7 @@ class Surface:
 
         # Text 
         self.text = [""]
-        self.placeholder_text = placeholder_text
+        self.placeholder_text = ""
         self.clipboard_text = ""
 
         # Font
@@ -57,6 +57,9 @@ class Surface:
         self.highlight_mode = False
         self.highlight_start = [0,0]
         self.highlight_end = [0,0]
+
+    def set_placeholder(self, placeholder):
+        self.placeholder_text = placeholder
 
     def set_background_color(self, color):
         self.background_color = color
@@ -112,6 +115,7 @@ class Surface:
                 cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
                 cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
                 draw.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.font.get_height(), color=cfg.HIGHLIGHT_YELLOW)
+        
         # Not on same row, if start comes first
         elif (self.highlight_start[0] < self.highlight_end[0]):
             cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
@@ -152,7 +156,9 @@ class Surface:
         self.draw_border()
         self.draw_highlight()
         self.draw_text()
-        self.draw_cursor()
+        self.draw_cursor()  # Does not draw if inactive
+
+        # Debugging highlight
         draw.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
         draw.text(self.surface, f"Highlight start: {self.highlight_start[0]}, {self.highlight_start[1]}", (100, 500))
         draw.text(self.surface, f"Highlight end: {self.highlight_end[0]}, {self.highlight_end[1]}", (100, 600))
@@ -185,18 +191,17 @@ class Surface:
         end = self.text[self.highlight_end[0]][self.highlight_end[1]:]
 
         # Deleting rows inside of text
-        for i in range(self.highlight_end[0] - 1, self.highlight_start[0] - 1, -1):
-            print(f"Row: {i}, Text: {self.text[i]}")
-            del self.text[i]
+        del self.text[self.highlight_start[0]:self.highlight_end[0]+1]
         
         # Splicing text back together
         self.text.insert(self.highlight_start[0], beginning + end)
+
+        print(f"Begin: {beginning}, End: {end}")
         
         # Reseting variables
         self.cursor = self.highlight_start.copy()
         self.highlight_end = self.highlight_start.copy()
         self.highlight_mode = False
-
 
     def press_left(self):
         if self.cursor[1] == 0:
@@ -309,9 +314,8 @@ class Surface:
                 print(f"An unexpected error occured during paste: {e}")
 
     def handle_event(self, events):
-        # If the surface is not active, just update and draw the text
+        # If the surface is not active, just return text
         if self.active == False:
-            self.draw(self.surface)
             return self.text
         
         # If the surface is active, handle events
@@ -369,6 +373,5 @@ class Surface:
                 if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     self.highlight_mode = False
 
-        # Draw the updated surface
-        self.draw(self.surface)
+        # Return text
         return self.text
