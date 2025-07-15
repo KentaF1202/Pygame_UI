@@ -50,6 +50,10 @@ def main():
     text_editor_surface.set_active()
     text_editor_surface.set_border()
 
+    te2_rect = ((WIDTH - cfg.WINDOW_OFFSET_X) // 2, 0, (WIDTH - cfg.WINDOW_OFFSET_X) // 2, HEIGHT - cfg.WINDOW_OFFSET_Y)
+    te2_surface = text_editor.Surface(te2_rect)
+    te2_surface.set_border()
+
     # Game loop
     while running:
         # Event handler
@@ -65,7 +69,12 @@ def main():
                 if event.button == 1:
                     if collision(mouse_pos, text_editor_rect):
                         text_editor_surface.set_active()
+                        te2_surface.set_inactive()
+                    elif collision(mouse_pos, te2_rect):
+                        te2_surface.set_active()
+                        text_editor_surface.set_inactive()
                     else:
+                        te2_surface.set_inactive()
                         text_editor_surface.set_inactive()
                 elif event.button == 3:
                     print("Right click pressed")
@@ -80,10 +89,12 @@ def main():
             
         # Pass events to surfaces
         text_editor_surface.handle_event(events)
+        te2_surface.handle_event(events)
 
         # Drawing to screen
         screen.fill(cfg.WHITE)
         text_editor_surface.draw(screen)
+        te2_surface.draw(screen)
 
         # Update the display
         pygame.display.flip()
