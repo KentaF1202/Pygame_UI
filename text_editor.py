@@ -311,10 +311,10 @@ class Surface:
         if self.highlight_start != self.highlight_end:
             self.delete_highlight()
 
-        self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
+        try:
+            self.clipboard_text = pygame.scrap.get(pygame.SCRAP_TEXT)
 
-        if self.clipboard_text:
-            try:
+            if self.clipboard_text:
                 # Splicing the string to insert the text in between
                 end_of_text = self.text[self.cursor[0]][self.cursor[1]:]
                 self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]]
@@ -338,11 +338,12 @@ class Surface:
 
                 # Reattaching the remenants of the string
                 self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + end_of_text
-    
-            except UnicodeDecodeError:
-                print("Could not decode clipboard data as UTF-8")
-            except Exception as e:
-                print(f"An unexpected error occured during paste: {e}")
+
+            print(f"this be the text in clip: {self.clipboard_text}")
+        except UnicodeDecodeError:
+            print("Could not decode clipboard data as UTF-8")
+        except Exception as e:
+            print(f"An unexpected error occured during paste: {e}")
 
     def handle_event(self, events):
         # If the surface is not active, just return text
@@ -380,6 +381,7 @@ class Surface:
                     if event.key == pygame.K_c:
                         pass
                     if event.key == pygame.K_v:
+                        print("pasting that ho")
                         self.paste()
                     if event.key == pygame.K_x:
                         pass
