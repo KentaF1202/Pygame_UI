@@ -307,6 +307,43 @@ class Surface:
         self.text[self.cursor[0]] = self.text[self.cursor[0]][:self.cursor[1]] + event.unicode + self.text[self.cursor[0]][self.cursor[1]:]
         self.cursor = [self.cursor[0], self.cursor[1] + 1]
 
+    def copy(self):
+        if self.highlight_start != self.highlight_end:
+            # Swapping positions to make start always have earlier position within text
+            if (self.highlight_start[0] < self.highlight_end[0]):
+                pass
+            elif (self.highlight_start[0] == self.highlight_end[0]):
+                if (self.highlight_start[1] < self.highlight_end[1]):
+                    pass
+                else:
+                    temp = self.highlight_start.copy()
+                    self.highlight_start = self.highlight_end.copy()
+                    self.highlight_end = temp.copy()
+            else:
+                temp = self.highlight_start.copy()
+                self.highlight_start = self.highlight_end.copy()
+                self.highlight_end = temp.copy()
+
+            text_to_copy = ""
+
+            if self.highlight_start[0] == self.highlight_end[0]:
+                text_to_copy = self.text[self.highlight_start[0]][self.highlight_start[1]:self.highlight_end[1]]
+            else:
+                beginning = self.text[self.highlight_start[0]][self.highlight_start[1]:]
+                end = self.text[self.highlight_end[0]][:self.highlight_end[1]]
+
+                for i in range(self.highlight_start[0]+1, self.highlight_end[0]):
+                    text_to_copy = text_to_copy + self.text[i] + '\n'
+
+                text_to_copy = beginning + '\n' + text_to_copy + end
+
+            try:
+                pygame.scrap.put(pygame.SCRAP_TEXT, text_to_copy.encode('utf-8'))
+            except Exception as e:
+                print(f"An unexpected error occured during copying: {e}")
+
+        self.highlight_mode = False
+
     def paste(self):
         if self.highlight_start != self.highlight_end:
             self.delete_highlight()
@@ -343,7 +380,11 @@ class Surface:
         except UnicodeDecodeError:
             print("Could not decode clipboard data as UTF-8")
         except Exception as e:
-            print(f"An unexpected error occured during paste: {e}")
+            print(f"An unexpected error occured during pasting: {e}")
+    
+    def cut(self):
+        self.copy()
+        self.delete_highlight()
 
     def select_all(self):
         self.highlight_start = [0,0]
@@ -391,12 +432,12 @@ class Surface:
                     if event.key == pygame.K_a:
                         self.select_all()
                     if event.key == pygame.K_c:
-                        pass
+                        self.copy()
                     if event.key == pygame.K_v:
                         print("pasting that ho")
                         self.paste()
                     if event.key == pygame.K_x:
-                        pass
+                        self.cut()
                 elif event.key == pygame.K_ESCAPE:
                     pass
                 elif event.key == pygame.K_BACKSPACE:
