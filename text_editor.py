@@ -59,6 +59,11 @@ class Surface:
         self.highlight_start = [0,0]
         self.highlight_end = [0,0]
 
+    def set_size(self, width, height):
+        self.width = width
+        self.height = height
+        self.surface = pygame.Surface((self.width,self.height))
+
     def set_placeholder(self, placeholder):
         self.placeholder_text = placeholder
 
@@ -426,17 +431,21 @@ class Surface:
             elif event.type == pygame.KEYDOWN:
                 if event.mod & pygame.KMOD_CTRL: # Check if Control key is held down
                     if event.key == pygame.K_UP:
-                        pass
-                    if event.key == pygame.K_DOWN:
-                        pass
-                    if event.key == pygame.K_a:
+                        self.set_size(self.width, self.height + 10)
+                    elif event.key == pygame.K_DOWN:
+                        self.set_size(self.width, self.height - 10)
+                    elif event.key == pygame.K_LEFT:
+                        self.set_size(self.width - 10, self.height)
+                    elif event.key == pygame.K_RIGHT:
+                        self.set_size(self.width + 10, self.height)
+                    elif event.key == pygame.K_a:
                         self.select_all()
-                    if event.key == pygame.K_c:
+                    elif event.key == pygame.K_c:
                         self.copy()
-                    if event.key == pygame.K_v:
+                    elif event.key == pygame.K_v:
                         print("pasting that ho")
                         self.paste()
-                    if event.key == pygame.K_x:
+                    elif event.key == pygame.K_x:
                         self.cut()
                 elif event.key == pygame.K_ESCAPE:
                     pass
