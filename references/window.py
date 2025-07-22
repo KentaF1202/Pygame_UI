@@ -19,11 +19,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         # Check for the VIDEORESIZE event
-        if event.type == pygame.VIDEORESIZE:
+        #if event.type == pygame.VIDEORESIZE:
             # Get the new dimensions
-            screen_width, screen_height = event.w, event.h
+            #screen_width, screen_height = event.w, event.h
             # Re-create the screen surface with the new size
-            screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+            #screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 
     # 4. Drawing
     # Fill the background with a color

@@ -5,8 +5,7 @@ import sys
 
 # File Imports
 import configs as cfg
-import draw
-import text_editor
+from surfaces import text_editor
 
 # Pygame Initialization
 pygame.init()
