@@ -6,6 +6,7 @@ import sys
 # File Imports
 import configs as cfg
 from surfaces import text_editor
+from tools.collision import collision
 
 # Pygame Initialization
 pygame.init()
@@ -23,15 +24,6 @@ clock = pygame.time.Clock()
 
 # Scrap Initialization
 pygame.scrap.init()
-
-# Collision Function
-def collision(mousepos, rect):
-    mousex, mousey = mousepos[0], mousepos[1]
-    x, y, width, height = rect
-    if (mousex > x and mousex < x+width):
-        if (mousey > y and mousey < y+height):
-            return True
-    return False
     
 # Main function to run the game loop
 #----------------------------------------------------------------------------------------------

@@ -3,7 +3,7 @@ import pygame
 
 # File Imports
 import configs as cfg
-from surfaces import basics
+from tools import shapes
 
 # Initialize Pygame
 pygame.init()  
@@ -90,11 +90,11 @@ class Surface:
 
     def draw_border(self):
         if self.border_type == "solid":
-            basics.rectangle(self.surface, (0, 0), self.width, self.height, self.border_thickness, self.border_color)
+            shapes.rectangle(self.surface, (0, 0), self.width, self.height, self.border_thickness, self.border_color)
     
     def draw_text(self):
         for i, line in enumerate(self.text):
-            basics.text(self.surface, line, (self.margin_x, self.margin_y + (i * self.line_height)), self.font_size, self.font_color)
+            shapes.text(self.surface, line, (self.margin_x, self.margin_y + (i * self.line_height)), self.font_size, self.font_color)
 
     def draw_cursor(self):
         # If the surface is inactive or cursor is not visible, do not draw it
@@ -103,7 +103,7 @@ class Surface:
 
         if (pygame.time.get_ticks() % 1000 < 500):
             cursor_x, cursor_y = self.cursor_to_coords(self.cursor[0], self.cursor[1])
-            basics.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
+            shapes.rectangle(self.surface, (cursor_x, cursor_y), 2, self.font.get_height(), 0, self.font_color)
 
     def draw_highlight(self):
         # If on same row
@@ -112,48 +112,48 @@ class Surface:
             if (self.highlight_start[1] < self.highlight_end[1]):
                 cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
                 cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
-                basics.text(self.surface, f"SL: x, y, width, height: {cursor_x1}, {cursor_y1}, {cursor_x2-cursor_x1}, {self.line_height}", (400,0), 40, cfg.GREEN)
-                basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+                shapes.text(self.surface, f"SL: x, y, width, height: {cursor_x1}, {cursor_y1}, {cursor_x2-cursor_x1}, {self.line_height}", (400,0), 40, cfg.GREEN)
+                shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
             # If end comes first
             else:
                 cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
                 cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
-                basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+                shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
         
         # Not on same row, if start comes first
         elif (self.highlight_start[0] < self.highlight_end[0]):
             cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
             cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], len(self.text[self.highlight_start[0]]))
-            basics.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,150), 40, cfg.GREEN)
-            basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+            shapes.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,150), 40, cfg.GREEN)
+            shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
 
             for i in range(self.highlight_start[0]+1, self.highlight_end[0]):
                 cursor_x1, cursor_y1 = self.cursor_to_coords(i, 0)
                 cursor_x2, _ = self.cursor_to_coords(i, len(self.text[i]))
-                basics.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (600,i*50), 40, cfg.GREEN)
-                basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+                shapes.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (600,i*50), 40, cfg.GREEN)
+                shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
 
             cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], 0)
             cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
-            basics.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,200), 40, cfg.GREEN)
-            basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+            shapes.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,200), 40, cfg.GREEN)
+            shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
        
         elif (self.highlight_end[0] < self.highlight_start[0]):
             cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_end[0], self.highlight_end[1])
             cursor_x2, _ = self.cursor_to_coords(self.highlight_end[0], len(self.text[self.highlight_end[0]]))
-            basics.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,150), 40, cfg.GREEN)
-            basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+            shapes.text(self.surface, f"1Lb: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,150), 40, cfg.GREEN)
+            shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
 
             for i in range(self.highlight_end[0]+1, self.highlight_start[0]):
                 cursor_x1, cursor_y1 = self.cursor_to_coords(i, 0)
                 cursor_x2, _ = self.cursor_to_coords(i, len(self.text[i]))
-                basics.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (600,i*50), 40, cfg.GREEN)
-                basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
+                shapes.text(self.surface, f"{i}SL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (600,i*50), 40, cfg.GREEN)
+                shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)
 
             cursor_x1, cursor_y1 = self.cursor_to_coords(self.highlight_start[0], 0)
             cursor_x2, _ = self.cursor_to_coords(self.highlight_start[0], self.highlight_start[1])
-            basics.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,200), 40, cfg.GREEN)
-            basics.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)           
+            shapes.text(self.surface, f"LL: x, y, width, height: {cursor_x1, cursor_y1, cursor_x2-cursor_x1, self.line_height}", (400,200), 40, cfg.GREEN)
+            shapes.rectangle(self.surface, (cursor_x1, cursor_y1), cursor_x2 - cursor_x1, self.line_height, color=cfg.HIGHLIGHT_YELLOW)           
         
     def draw(self, screen):
         try:
@@ -164,10 +164,10 @@ class Surface:
             self.draw_cursor()  # Does not draw if inactive
 
             # Debugging highlight
-            basics.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
-            basics.text(self.surface, f"Highlight start: {self.highlight_start[0]}, {self.highlight_start[1]}", (100, 500))
-            basics.text(self.surface, f"Highlight end: {self.highlight_end[0]}, {self.highlight_end[1]}", (100, 600))
-            basics.text(self.surface, f"Cursor: {self.cursor}", (100, 700))
+            shapes.text(self.surface, f"Highlight mode: {"on" if self.highlight_mode else "off"}", (100, 400))
+            shapes.text(self.surface, f"Highlight start: {self.highlight_start[0]}, {self.highlight_start[1]}", (100, 500))
+            shapes.text(self.surface, f"Highlight end: {self.highlight_end[0]}, {self.highlight_end[1]}", (100, 600))
+            shapes.text(self.surface, f"Cursor: {self.cursor}", (100, 700))
 
             screen.blit(self.surface, (self.x, self.y))
         except Exception as e:
