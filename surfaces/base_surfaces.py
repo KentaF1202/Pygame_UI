@@ -34,6 +34,7 @@ class UIElement:
         return self._parent
     
     
+    
     def draw(self, surface: pygame.Surface) -> None:
         if not isinstance(surface, pygame.Surface):
             raise ValueError("Surface must be an instance of pygame.Surface.")
