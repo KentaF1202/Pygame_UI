@@ -6,6 +6,7 @@ import sys
 # File Imports
 import configs as cfg
 from surfaces import text_editor
+from surfaces.base_surfaces import UIElement
 from tools.collision import collision
 
 # Pygame Initialization
@@ -87,6 +88,60 @@ def main():
         text_editor_surface.draw(screen)
         te2_surface.draw(screen)
 
+        # Update the display
+        pygame.display.flip()
+        clock.tick(cfg.FPS)
+
+    # Clean up
+    pygame.quit()
+    sys.exit()
+
+def newmain():
+    # Running variables
+    running = True
+
+    # Starter variables
+    mouse_pos = (0,0)
+
+    # Initialize surfaces
+    rect1 = (500, 100, 500, 500)
+    surface1 = UIElement(rect1)
+    rect2 = (200, 200, 100, 100)
+    surface2 = UIElement(rect2, cfg.RED, surface1)
+
+    # Game loop
+    while running:
+        # Event handler
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                running = False
+            
+            elif event.type == pygame.MOUSEMOTION:
+                mouse_pos = pygame.mouse.get_pos()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    print("Left click pressed")
+                elif event.button == 3:
+                    print("Right click pressed")
+                elif event.button == 4:
+                    print("Scroll up")
+                elif event.button == 5:
+                    print("Scroll down")
+            
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+            
+        # Pass events to surfaces
+        
+
+        # Drawing to screen
+        screen.fill(cfg.WHITE)
+        surface1.draw(screen)
+        surface2.draw()
+        
         # Update the display
         pygame.display.flip()
         clock.tick(cfg.FPS)
